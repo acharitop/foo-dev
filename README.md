@@ -36,3 +36,18 @@ After installation:
 *  `git push -u origin master`
 
 SSH pashphrase: acharitop
+
+6) Configuration
+----------------
+
+Student Types
++-------------+---------+
+| Grade       | Type    |
++-------------+---------+
+| [0.0, 2.5]  | A       |
+| (2.5, 5.0]  | B       |
+| (5.0, 7.5]  | C       |
+| (7.5, 10.0] | D       |
++-------------+---------+
+
+

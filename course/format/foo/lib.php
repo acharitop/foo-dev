@@ -44,6 +44,32 @@ class format_foo extends format_base {
         return true;
     }
 
+    public function is_admin() {
+	global $USER;
+	global $COURSE;
+
+	if ($USER->id == 2)
+	   return true;
+
+	$context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+	$roles = get_user_roles($context, $USER->id, false);
+	$role = key($roles);
+	$roleid = $roles[$role]->roleid;
+	
+	return $roleid <= 3;
+    }
+
+    protected function find_student_type($grade) {
+	if ($grade <= 2.5)
+		return 'A';
+	elseif ($grade <= 5.0)
+		return 'B';
+	elseif ($grade <= 7.5)
+		return 'C';
+	else
+		return 'D';
+    }
+
     public function get_student_type() {
 	global $DB;
 	global $USER;
@@ -55,11 +81,9 @@ class format_foo extends format_base {
 	        $quiz_r = $DB->get_record('quiz_grades', array('quiz'=>'3', 'userid'=>$current_user));
 
         	if ($quiz_r != null) {
-                    $grade = $quiz_r->grade;
-                    $active_sections = array(0 => $all_section_info[0]);
                     $record = new stdClass();
                     $record->student = $current_user;
-                    $record->type = 'A';
+                    $record->type = $this->find_student_type($quiz_r->grade);
                     $DB->insert_record('student_profile', $record, false);
                     $type = $record->type;
         	}
