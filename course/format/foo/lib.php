@@ -44,6 +44,34 @@ class format_foo extends format_base {
         return true;
     }
 
+    public function get_student_type() {
+	global $DB;
+	global $USER;
+
+	$current_user =  $USER->id;
+	$type_r = $DB->get_record('student_profile', array('student' => $current_user));
+
+	if ($type_r == null) {
+	        $quiz_r = $DB->get_record('quiz_grades', array('quiz'=>'3', 'userid'=>$current_user));
+
+        	if ($quiz_r != null) {
+                    $grade = $quiz_r->grade;
+                    $active_sections = array(0 => $all_section_info[0]);
+                    $record = new stdClass();
+                    $record->student = $current_user;
+                    $record->type = 'A';
+                    $DB->insert_record('student_profile', $record, false);
+                    $type = $record->type;
+        	}
+        	else
+                    $type = null;
+	}
+        else
+        	$type = $type_r->type;
+
+	return $type;
+    }
+
     /**
      * Returns the display name of the given section that the course prefers.
      *
