@@ -1,17 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="course/format/foo/db" VERSION="20130609" COMMENT="XMLDB file for Moodle course/format/foo"
+<XMLDB PATH="course/format/foo/db" VERSION="20130630" COMMENT="XMLDB file for Moodle course/format/foo"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="student_profile" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="profile" COMMENT="Default comment for the table, please edit me">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="student" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="type" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="threshold" TYPE="number" LENGTH="5" NOTNULL="true" SEQUENCE="false" DECIMALS="2"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="profile_sections" COMMENT="Default comment for the table, please edit me">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="profileid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sectionid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ordering" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_profile_sections_profile" TYPE="foreign" FIELDS="profileid" REFTABLE="profile" REFFIELDS="id"/>
+        <KEY NAME="uq_profile_sections_1" TYPE="unique" FIELDS="profileid, ordering"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="student_profile" COMMENT="Default comment for the table, please edit me">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="profileid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_student_profile_profile" TYPE="foreign" FIELDS="profileid" REFTABLE="profile" REFFIELDS="id"/>
+        <KEY NAME="fk_student_profile_user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="student_sections" COMMENT="Default comment for the table, please edit me">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sectionid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ordering" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_student_sections_student" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="uq_student_sections_1" TYPE="unique" FIELDS="userid, ordering"/>
       </KEYS>
     </TABLE>
   </TABLES>
