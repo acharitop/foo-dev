@@ -40,13 +40,13 @@ SSH pashphrase: acharitop
 6) Configuration
 ----------------
 
-# mdl_profile
+### mdl_profile
 * id : 1, name : profile_A, threshold : 0.00
 * id : 2, name : profile_B, threshold : 2.50
 * id : 3, name : profile_C, threshold : 5.00
 * id : 4, name : profile_D, threshold : 7.50
 
-# mdl_profile_sections
+### mdl_profile_sections
 * profileid : 1
 	* sectionid : 1, ordering : 1
 	* sectionid : 2, ordering : 2
