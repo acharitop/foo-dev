@@ -130,7 +130,7 @@ class format_foo extends format_base {
 
 	$quiz = $DB->get_record('quiz_grades', array('quiz' => $last_section->quizid, 'userid' => $userid));
 
-	if ($quiz == null)
+	if ($quiz == null or $quiz->grade < 5.0)
 	    return false;
 
 	$profile = $DB->get_record('student_profile', array('userid' => $userid));
