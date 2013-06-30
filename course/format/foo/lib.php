@@ -98,6 +98,7 @@ class format_foo extends format_base {
 	$record->userid = $userid;
 	$record->sectionid = $first_section->sectionid;
 	$record->ordering = 1;
+	$record->quizid = $first_section->quizid;
 	$DB->insert_record('student_sections', $record, false);
     }
 
@@ -109,7 +110,7 @@ class format_foo extends format_base {
 	if ($profile != null)
 	    return true;
 
-	$quiz = $DB->get_record('quiz_grades', array('quiz' => '3', 'userid' => $userid)); //HARDCODED init quiz id
+	$quiz = $DB->get_record('quiz_grades', array('quiz' => '7', 'userid' => $userid)); //HARDCODED init quiz id
 
         if ($quiz != null) {
 	    $type = $this->init_student_profile($userid, $quiz->grade);
@@ -121,6 +122,33 @@ class format_foo extends format_base {
 
     }
 
+    protected function advance_section($userid) {
+	global $DB;
+
+	$sections = $DB->get_records('student_sections', array('userid' => $userid), 'ordering DESC', '*', 0, 1);
+	$last_section = $sections[key($sections)];
+
+	$quiz = $DB->get_record('quiz_grades', array('quiz' => $last_section->quizid, 'userid' => $userid));
+
+	if ($quiz == null)
+	    return false;
+
+	$profile = $DB->get_record('student_profile', array('userid' => $userid));
+	$next_section = $DB->get_record('profile_sections', array('profileid' => $profile->profileid, 'ordering' => $last_section->ordering+1));
+
+	if ($next_section == null)
+	    return false;
+
+	$record = new stdClass();
+	$record->userid = $userid;
+	$record->sectionid = $next_section->sectionid;
+	$record->ordering = $next_section->ordering;
+	$record->quizid = $next_section->quizid;
+	$DB->insert_record('student_sections', $record, false);
+
+	return true;
+    }
+
     public function get_student_sections() {
 	global $DB;
 	global $USER;
@@ -129,6 +157,8 @@ class format_foo extends format_base {
 
 	if (!$this->is_student_initialized($current_user))
 	    return array(0);
+
+	$this->advance_section($current_user);
 
 	$sections = $DB->get_records('student_sections', array('userid' => $current_user), 'ordering ASC');
 	foreach($sections as $s) {
