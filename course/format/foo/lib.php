@@ -48,7 +48,7 @@ class format_foo extends format_base {
 	global $USER;
 	global $COURSE;
 
-	if ($USER->id == 2)
+	if ($USER->id == 2) // HARDCODED admin user id
 	   return true;
 
 	$context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
@@ -60,41 +60,84 @@ class format_foo extends format_base {
     }
 
     protected function find_student_type($grade) {
-	if ($grade <= 2.5)
-		return 'A';
-	elseif ($grade <= 5.0)
-		return 'B';
-	elseif ($grade <= 7.5)
-		return 'C';
-	else
-		return 'D';
+	global $DB;
+
+	$profile = $DB->get_records('profile');
+	
+	$i = 1;
+	$type = null;
+	while ($i <= count($profile)) {
+	    if ($grade >= $profile[$i]->threshold) {
+		$type = $profile[$i]->id;
+		$i++;
+	    }
+	    else
+		return $type;
+	}
+	
+	return $type;
     }
 
-    public function get_student_type() {
+    protected function init_student_profile($userid,  $grade) {
+	global $DB;
+
+	$record = new stdClass();
+	$record->userid = $userid;
+	$record->profileid = $this->find_student_type($grade);
+	$DB->insert_record('student_profile', $record, false);
+
+	return $record->profileid;
+    }
+
+    protected function init_student_sections($userid, $type) {
+	global $DB;
+
+	$first_section = $DB->get_record('profile_sections', array('profileid' => $type, 'ordering' => 1));
+
+	$record = new stdClass();
+	$record->userid = $userid;
+	$record->sectionid = $first_section->sectionid;
+	$record->ordering = 1;
+	$DB->insert_record('student_sections', $record, false);
+    }
+
+    public function is_student_initialized($userid) {
+	global $DB;
+
+	$profile = $DB->get_record('student_profile', array('userid' => $userid));
+
+	if ($profile != null)
+	    return true;
+
+	$quiz = $DB->get_record('quiz_grades', array('quiz' => '3', 'userid' => $userid)); //HARDCODED init quiz id
+
+        if ($quiz != null) {
+	    $type = $this->init_student_profile($userid, $quiz->grade);
+	    $this->init_student_sections($userid, $type);
+	    return true;
+        }
+        else
+           return false;
+
+    }
+
+    public function get_student_sections() {
 	global $DB;
 	global $USER;
 
 	$current_user =  $USER->id;
-	$type_r = $DB->get_record('student_profile', array('student' => $current_user));
 
-	if ($type_r == null) {
-	        $quiz_r = $DB->get_record('quiz_grades', array('quiz'=>'3', 'userid'=>$current_user));
+	if (!$this->is_student_initialized($current_user))
+	    return array(0);
 
-        	if ($quiz_r != null) {
-                    $record = new stdClass();
-                    $record->student = $current_user;
-                    $record->type = $this->find_student_type($quiz_r->grade);
-                    $DB->insert_record('student_profile', $record, false);
-                    $type = $record->type;
-        	}
-        	else
-                    $type = null;
+	$sections = $DB->get_records('student_sections', array('userid' => $current_user), 'ordering ASC');
+	foreach($sections as $s) {
+	    $ss[] = $s->sectionid;
 	}
-        else
-        	$type = $type_r->type;
 
-	return $type;
-    }
+	return $ss;
+    } 
+
 
     /**
      * Returns the display name of the given section that the course prefers.

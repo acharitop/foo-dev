@@ -69,7 +69,7 @@ class format_foo_renderer extends format_section_renderer_base {
      * @param array $modnames (argument not used)
      * @param array $modnamesused (argument not used)
      */
-    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $init) {
+    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $vsections) {
         global $PAGE;
 
         $modinfo = get_fast_modinfo($course);
@@ -89,10 +89,18 @@ class format_foo_renderer extends format_section_renderer_base {
 
 	$all_section_info = $modinfo->get_section_info_all();
 	
-	$active_sections = ($init) ? $modinfo->get_section_info_all() : array(0 => $all_section_info[0]);
+//	$active_sections = ($init) ? $modinfo->get_section_info_all() : array(0 => $all_section_info[0]);
+
+	foreach($vsections as $i) {
+	    $active_sections[] = array('id' => $i, 'section_info' => $all_section_info[$i]);
+	}
 
         //foreach ($modinfo->get_section_info_all() as $section => $thissection) {
-        foreach ($active_sections as $section => $thissection) {
+        //foreach ($active_sections as $section => $thissection) {
+	foreach ($active_sections as $asect) {
+	    $section = $asect['id'];
+	    $thissection = $asect['section_info'];
+
             if ($section == 0) {
                 // 0-section is displayed a little different then the others
                 if ($thissection->summary or !empty($modinfo->sections[0]) or $PAGE->user_is_editing()) {
