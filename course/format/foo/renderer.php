@@ -69,7 +69,7 @@ class format_foo_renderer extends format_section_renderer_base {
      * @param array $modnames (argument not used)
      * @param array $modnamesused (argument not used)
      */
-    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $vsections) {
+    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $vsections, $tophtml) {
         global $PAGE;
 
         $modinfo = get_fast_modinfo($course);
@@ -90,6 +90,12 @@ class format_foo_renderer extends format_section_renderer_base {
 	$all_section_info = $modinfo->get_section_info_all();
 	
 //	$active_sections = ($init) ? $modinfo->get_section_info_all() : array(0 => $all_section_info[0]);
+
+	if ($tophtml) {
+	    echo html_writer::start_tag('li', array('class' => 'section main clearfix'));
+  	    echo html_writer::tag('div', $tophtml, array('class' => 'content'));
+	    echo html_writer::end_tag('lil');
+	}
 
 	foreach($vsections as $i) {
 	    $active_sections[] = array('id' => $i, 'section_info' => $all_section_info[$i]);

@@ -89,6 +89,20 @@ class format_foo extends format_base {
 	return $record->profileid;
     }
 
+    public function get_curr_profile_name() {
+	global $DB;
+	global $USER;
+
+	$profile = $DB->get_record('student_profile', array('userid' => $USER->id));
+
+	if ($profile == null)
+	    return null;
+
+	$profile_info = $DB->get_record('profile', array('id' => $profile->profileid));
+
+	return $profile_info->name;
+    }
+
     protected function init_student_sections($userid, $type) {
 	global $DB;
 
