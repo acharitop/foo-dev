@@ -45,141 +45,182 @@ class format_foo extends format_base {
     }
 
     public function is_admin() {
-	global $USER;
-	global $COURSE;
-
-	if ($USER->id == 2) // HARDCODED admin user id
-	   return true;
-
-	$context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-	$roles = get_user_roles($context, $USER->id, false);
-	$role = key($roles);
-	$roleid = $roles[$role]->roleid;
-	
-	return $roleid <= 3;
-    }
-
-    protected function find_student_type($grade) {
-	global $DB;
-
-	$profile = $DB->get_records('profile');
-	
-	$i = 1;
-	$type = null;
-	while ($i <= count($profile)) {
-	    if ($grade >= $profile[$i]->threshold) {
-		$type = $profile[$i]->id;
-		$i++;
-	    }
-	    else
-		return $type;
-	}
-	
-	return $type;
-    }
-
-    protected function init_student_profile($userid,  $grade) {
-	global $DB;
-
-	$record = new stdClass();
-	$record->userid = $userid;
-	$record->profileid = $this->find_student_type($grade);
-	$DB->insert_record('student_profile', $record, false);
-
-	return $record->profileid;
+        global $USER;
+        global $COURSE;
+        
+        if ($USER->id == 2) // HARDCODED admin user id
+           return true;
+        
+        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $roles = get_user_roles($context, $USER->id, false);
+        $role = key($roles);
+        $roleid = $roles[$role]->roleid;
+        
+        return $roleid <= 3;
     }
 
     public function get_curr_profile_name() {
-	global $DB;
-	global $USER;
-
-	$profile = $DB->get_record('student_profile', array('userid' => $USER->id));
-
-	if ($profile == null)
-	    return null;
-
-	$profile_info = $DB->get_record('profile', array('id' => $profile->profileid));
-
-	return $profile_info->name;
+        global $DB;
+        global $USER;
+        global $COURSE;
+        
+        $profile = $DB->get_record('student_profile', array(
+            'userid' => $USER->id,
+            'courseid' => $COURSE->id,
+        ));
+        
+        if ($profile == null)
+            return null;
+        
+        $profile_info = $DB->get_record('profile', array('id' => $profile->profileid));
+        
+        return $profile_info->name;
     }
 
-    protected function init_student_sections($userid, $type) {
-	global $DB;
-
-	$first_section = $DB->get_record('profile_sections', array('profileid' => $type, 'ordering' => 1));
-
-	$record = new stdClass();
-	$record->userid = $userid;
-	$record->sectionid = $first_section->sectionid;
-	$record->ordering = 1;
-	$record->quizid = $first_section->quizid;
-	$DB->insert_record('student_sections', $record, false);
-    }
-
-    public function is_student_initialized($userid) {
-	global $DB;
-
-	$profile = $DB->get_record('student_profile', array('userid' => $userid));
-
-	if ($profile != null)
-	    return true;
-
-	$quiz = $DB->get_record('quiz_grades', array('quiz' => '7', 'userid' => $userid)); //HARDCODED init quiz id
-
-        if ($quiz != null) {
-	    $type = $this->init_student_profile($userid, $quiz->grade);
-	    $this->init_student_sections($userid, $type);
-	    return true;
+    protected function find_student_type($grade, $courseID) {
+        global $DB;
+        
+        $profile = $DB->get_records('profile', array('courseid' => $courseID));
+        
+        $i = 1;
+        $type = null;
+        while ($i <= count($profile)) {
+            if ($grade >= $profile[$i]->threshold) {
+                $type = $profile[$i]->id;
+                $i++;
+            }
+            else
+                return $type;
         }
-        else
-           return false;
-
+        
+        return $type;
     }
 
-    protected function advance_section($userid) {
-	global $DB;
+    public function is_student_initialized($userID, $courseID) {
+        global $DB;
+        
+        $profile = $DB->get_record('student_profile', array(
+            'userid' => $userID,
+            'courseid' => $courseID,
+        ));
+        
+        if ($profile != null)
+            return true;
+        
+        $course_settings = $DB->get_record('foo_course_settings', array(
+            'courseid' => $courseID,
+        ));
+        
+        $quiz = $DB->get_record('quiz_grades', array(
+            'quiz' => $course_settings->sorting_quizid,
+            'userid' => $userID,
+        ));
+        
+        if ($quiz == null)
+            return false;
+        
+        $student_profile = $this->init_student_profile($userID, $courseID, $quiz->grade);
+        $this->init_student_sections($student_profile);
+        return true;
+    }
 
-	$sections = $DB->get_records('student_sections', array('userid' => $userid), 'ordering DESC', '*', 0, 1);
-	$last_section = $sections[key($sections)];
+    protected function init_student_profile($userID, $courseID, $grade) {
+        global $DB;
+        
+        $record = new stdClass();
+        $record->userid = $userID;
+        $record->courseid = $courseID;
+        $record->profileid = $this->find_student_type($grade, $courseID);
+        $DB->insert_record('student_profile', $record, false);
+        
+        $student_profile = $DB->get_record('student_profile', array(
+            'userid' => $userID,
+            'courseid' => $courseID,
+        ));
+        
+        return $student_profile;
+    }
 
-	$quiz = $DB->get_record('quiz_grades', array('quiz' => $last_section->quizid, 'userid' => $userid));
+    protected function init_student_sections($student_profile) {
+        global $DB;
+        
+        $first_section = $DB->get_record('profile_sections', array(
+            'profileid' => $student_profile->profileid,
+            'ordering' => 1,
+        ));
+        
+        $record = new stdClass();
+        $record->student_profileid = $student_profile->id;
+        $record->profile_sectionid = $first_section->id;
+        $DB->insert_record('student_sections', $record, false);
+    }
 
-	if ($quiz == null or $quiz->grade < 5.0)
-	    return false;
-
-	$profile = $DB->get_record('student_profile', array('userid' => $userid));
-	$next_section = $DB->get_record('profile_sections', array('profileid' => $profile->profileid, 'ordering' => $last_section->ordering+1));
-
-	if ($next_section == null)
-	    return false;
-
-	$record = new stdClass();
-	$record->userid = $userid;
-	$record->sectionid = $next_section->sectionid;
-	$record->ordering = $next_section->ordering;
-	$record->quizid = $next_section->quizid;
-	$DB->insert_record('student_sections', $record, false);
-
-	return true;
+    protected function advance_section($student_profile, $curr_section) {
+        global $DB;
+        
+        $quiz = $DB->get_record('quiz_grades', array(
+            'quiz' => $curr_section->quizid,
+            'userid' => $student_profile->userid,
+        ));
+        
+        if ($quiz == null or $quiz->grade < 5.0)
+            return null;
+        
+        $next_section = $DB->get_record('profile_sections', array(
+            'profileid' => $curr_section->profileid,
+            'ordering' => $curr_section->ordering + 1,
+        ));
+        
+        if ($next_section == null)
+            return null;
+        
+        $record = new stdClass();
+        $record->student_profileid = $student_profile->id;
+        $record->profile_sectionid = $next_section->id;
+        $DB->insert_record('student_sections', $record, false);
+        
+        return $next_section->section;
     }
 
     public function get_student_sections() {
-	global $DB;
-	global $USER;
+        global $DB;
+        global $USER;
+        global $COURSE;
 
-	$current_user =  $USER->id;
-
-	if (!$this->is_student_initialized($current_user))
-	    return array(0);
-
-	$this->advance_section($current_user);
-
-	$sections = $DB->get_records('student_sections', array('userid' => $current_user), 'ordering ASC');
-	foreach($sections as $s) {
-	    $ss[] = $s->sectionid;
-	}
-
-	return $ss;
+        $userID =  $USER->id;
+        $courseID = $COURSE->id;
+        
+        if (!$this->is_student_initialized($userID, $courseID))
+            return array(0);
+        
+        $student_profile = $DB->get_record('student_profile', array(
+            'userid' => $userID,
+            'courseid' => $courseID,
+        ));
+        
+        $sections = $DB->get_records_sql('
+                SELECT 
+                  t1.* 
+                FROM
+                  {profile_sections} AS t1 
+                  JOIN {student_sections} AS t2 
+                    ON t1.`id` = t2.`profile_sectionid` 
+                WHERE t2.`student_profileid` = ? 
+                ORDER BY t1.`ordering` ASC 
+            ',
+            array($student_profile->id)
+        );
+        
+        $curr_section = $sections[key($sections)];
+        
+        foreach($sections as $s)
+            $ss[] = $s->section;
+        
+        $new_section = $this->advance_section($student_profile, $curr_section);
+        if ($new_section)
+          $ss[] = $new_section;
+        
+        return $ss;
     } 
 
 
