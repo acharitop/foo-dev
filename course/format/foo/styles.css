@@ -1,3 +1,19 @@
+.course-content .helper-content {
+  margin: 0 0 5px 0;
+  padding: 0px 40px;
+  border: 1px solid #DDD;
+  overflow: auto;
+}
+.course-content .helper-content .helper {
+  background-image: url([[pix:format_foo|a]]);
+  float: left;
+  width: 240px; 
+  height: 160px;
+}
+.course-content .helper-content .helper-info {
+  padding: 10px;
+  float: left;
+}
 .course-content ul.weeks {margin:0;}
 .course-content ul.weeks li.section {list-style: none;margin:0 0 5px 0;padding:0;}
 .course-content ul.weeks li.section .content {margin:0 40px;}

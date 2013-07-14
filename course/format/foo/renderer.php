@@ -59,6 +59,18 @@ class format_foo_renderer extends format_section_renderer_base {
     protected function page_title() {
         return get_string('weeklyoutline');
     }
+    
+    public function print_helper_div($tophtml) {
+        if ($tophtml) {
+            echo html_writer::start_tag('div', array('class' => 'helper-content'));
+                echo html_writer::start_tag('div', array('class' => 'helper'));
+                echo html_writer::end_tag('div');
+                echo html_writer::start_tag('div', array('class' => 'helper-info'));
+                    echo $tophtml;
+                echo html_writer::end_tag('div');
+            echo html_writer::end_tag('div');
+        }
+    }
 
     /**
      * Output the html for a multiple section page
@@ -69,7 +81,7 @@ class format_foo_renderer extends format_section_renderer_base {
      * @param array $modnames (argument not used)
      * @param array $modnamesused (argument not used)
      */
-    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $vsections, $tophtml) {
+    public function print_custom_multiple_section_page($course, $sections, $mods, $modnames, $modnamesusedi, $vsections) {
         global $PAGE;
 
         $modinfo = get_fast_modinfo($course);
@@ -87,25 +99,19 @@ class format_foo_renderer extends format_section_renderer_base {
         // Now the list of sections..
         echo $this->start_section_list();
 
-	$all_section_info = $modinfo->get_section_info_all();
-	
-//	$active_sections = ($init) ? $modinfo->get_section_info_all() : array(0 => $all_section_info[0]);
+        $all_section_info = $modinfo->get_section_info_all();
+    
+//    $active_sections = ($init) ? $modinfo->get_section_info_all() : array(0 => $all_section_info[0]);
 
-	if ($tophtml) {
-	    echo html_writer::start_tag('li', array('class' => 'section main clearfix'));
-  	    echo html_writer::tag('div', $tophtml, array('class' => 'content'));
-	    echo html_writer::end_tag('lil');
-	}
-
-	foreach($vsections as $i) {
-	    $active_sections[] = array('id' => $i, 'section_info' => $all_section_info[$i]);
-	}
+    foreach($vsections as $i) {
+        $active_sections[] = array('id' => $i, 'section_info' => $all_section_info[$i]);
+    }
 
         //foreach ($modinfo->get_section_info_all() as $section => $thissection) {
         //foreach ($active_sections as $section => $thissection) {
-	foreach ($active_sections as $asect) {
-	    $section = $asect['id'];
-	    $thissection = $asect['section_info'];
+    foreach ($active_sections as $asect) {
+        $section = $asect['id'];
+        $thissection = $asect['section_info'];
 
             if ($section == 0) {
                 // 0-section is displayed a little different then the others

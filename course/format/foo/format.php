@@ -45,12 +45,16 @@ course_create_sections_if_missing($course, range(0, $course->numsections));
 
 $renderer = $PAGE->get_renderer('format_foo');
 
-if ($format->is_admin())
-    $renderer->print_multiple_section_page($course, null, null, null, null);
+if ($format->is_admin()) {
+    $tophtml = "<p>Hello Admin!!</p>";
+    $renderer->print_helper_div($tophtml);
+    $renderer->print_multiple_section_page($course, null, null, null, null, $tophtml);
+}
 else {
     $sections = $format->get_student_sections();
     $tophtml = $format->get_curr_profile_name();
-    $renderer->print_custom_multiple_section_page($course, null, null, null, null, $sections, $tophtml);
+    $renderer->print_helper_div($tophtml);
+    $renderer->print_custom_multiple_section_page($course, null, null, null, null, $sections);
 }
 
 /*

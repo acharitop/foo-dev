@@ -70,7 +70,7 @@ class format_foo extends format_base {
         ));
         
         if ($profile == null)
-            return null;
+            return "Fill in the sorting quiz!";
         
         $profile_info = $DB->get_record('profile', array('id' => $profile->profileid));
         
