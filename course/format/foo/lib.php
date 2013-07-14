@@ -211,7 +211,9 @@ class format_foo extends format_base {
             array($student_profile->id)
         );
         
-        $curr_section = $sections[key($sections)];
+        $keys = array_keys($sections);
+        $last_key = $keys[count($keys) - 1];
+        $curr_section = $sections[$last_key];
         
         foreach($sections as $s)
             $ss[] = $s->section;
