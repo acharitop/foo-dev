@@ -5,7 +5,7 @@
   overflow: auto;
 }
 .course-content .helper-content .helper {
-  background-image: url([[pix:format_foo|a]]);
+  background-image: url([[pix:format_foo|welcome]]);
   float: left;
   width: 240px; 
   height: 160px;
